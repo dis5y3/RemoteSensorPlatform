@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="true"
+        jar="F:\RemoteBluetoothTest\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="26.0.1"
+        sha1="3be78ebc2706b2e1fe2f12d5726887a92d6c183b">
+        <dex dex="F:\RemoteBluetoothTest\app\build\intermediates\transforms\dex\debug\folders\1000\10000\instant-run_e9c5dee351495d5e96d969ae90020cbd3c90d67f\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="F:\RemoteBluetoothTest\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="26.0.1"
+        sha1="7727d2001965127f27080e11d59af47e4f559d95">
+        <dex dex="F:\RemoteBluetoothTest\app\build\intermediates\transforms\dex\debug\folders\1000\10000\instant-run-bootstrap_b729d621f515cdb520ab7f0af1a5b3ab7927860b\classes.dex" />
+    </item>
+
+</items>
