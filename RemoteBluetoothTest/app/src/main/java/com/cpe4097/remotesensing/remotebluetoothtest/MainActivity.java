@@ -94,7 +94,6 @@ public class MainActivity extends Activity {
         View.OnClickListener connectHandler = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"click",Toast.LENGTH_SHORT).show();
                 //do connection stuff
 //                Intent selectDevice = new Intent(getApplicationContext(), DeviceListActivity.class);
 //                startActivityForResult(selectDevice,REQUEST_CONNECT_DEVICE_SECURE);
