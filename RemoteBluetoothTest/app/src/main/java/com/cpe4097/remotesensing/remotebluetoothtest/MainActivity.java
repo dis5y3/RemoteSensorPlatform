@@ -17,34 +17,24 @@
  */
 package com.cpe4097.remotesensing.remotebluetoothtest;
 
-import java.io.IOException;
 import java.util.UUID;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     //Default BT UUID = 00001101-0000-1000-8000-00805f9b34fb
     private final UUID deviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
     private static final String TAG = "MainActivity";
@@ -65,7 +55,7 @@ public class MainActivity extends Activity {
     private StringBuffer mOutStringBuffer = null; //String buffer for outgoing messages
     private BluetoothAdapter mBTAdapter = null; //Local BT Adapter
     private BluetoothSerialService mBTService = null; //Member object for BT Services
-    private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be
+    private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be hardcoded
     //^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
     //UI elements
     private Button btConnect = null;
@@ -99,13 +89,12 @@ public class MainActivity extends Activity {
 //                startActivityForResult(selectDevice,REQUEST_CONNECT_DEVICE_SECURE);
                 BluetoothDevice mBTDevice = mBTAdapter.getRemoteDevice(address);
                 mBTService.connect(mBTDevice);
-                if(mBTService.getState() == BluetoothSerialService.STATE_CONNECTED) {
-                    Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                else {
-                btSend.setEnabled(true);
-                }
+                Log.d(TAG, "getState() = " + mBTService.getState());
+                //Wait for connection
+                //Object dontcare = null;
+                new GetConnectionStatusTask().execute();
+                //Notify user and do nothing if cannot connect
+
             }
         };
         View.OnClickListener sendDataHandler = new View.OnClickListener() {
@@ -120,6 +109,27 @@ public class MainActivity extends Activity {
         btConnect.setOnClickListener(connectHandler);
         btSend.setOnClickListener(sendDataHandler);
     }
+
+    private class GetConnectionStatusTask extends AsyncTask {
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            while(mBTService.getState() == BluetoothSerialService.STATE_CONNECTING){
+                //try { wait(500); } catch (InterruptedException e) { e.printStackTrace(); }
+            }
+            return null;
+        }
+        protected void onPostExecute() {
+            if(mBTService.getState() == BluetoothSerialService.STATE_NONE) {
+                Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            //Enable Send button if connection successful
+            else if (mBTService.getState() == BluetoothSerialService.STATE_CONNECTED){
+                btSend.setEnabled(true);
+            }
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -142,20 +152,6 @@ public class MainActivity extends Activity {
 //        }
 //    }
 
-//    /**
-//     * Establish connection with other device
-//     *
-//     * @param data   An {@link Intent} with {@link DeviceListActivity#EXTRA_DEVICE_ADDRESS} extra.
-//     */
-//    private void connectDevice(Intent data) {
-//        // Get the device MAC address
-//        String address = data.getExtras()
-//                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-//        // Get the BluetoothDevice object
-//        BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
-//        // Attempt to connect to the device
-//        mBTService.connect(device);
-//    }
     /**
      * Set up the UI and background operations for chat.
      */
@@ -191,6 +187,7 @@ public class MainActivity extends Activity {
         mOutStringBuffer = new StringBuffer("");
     }
 
+    //Adapted from BluetoothChat example, mostly sets connection status string
     private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -198,15 +195,15 @@ public class MainActivity extends Activity {
                 case Constants.MESSAGE_STATE_CHANGE:
                     switch (msg.arg1) {
                         case BluetoothSerialService.STATE_CONNECTED:
-                            connectStatus.setText(getString(R.string.title_connected_to, mConnectedDeviceName));
+                            connectStatus.setText(getString(R.string.connected_to, mConnectedDeviceName));
                             //mConversationArrayAdapter.clear();
                             break;
                         case BluetoothSerialService.STATE_CONNECTING:
-                            connectStatus.setText(R.string.title_connecting);
+                            connectStatus.setText(R.string.connecting);
                             break;
                         case BluetoothSerialService.STATE_LISTEN:
                         case BluetoothSerialService.STATE_NONE:
-                            connectStatus.setText(R.string.title_not_connected);
+                            connectStatus.setText(R.string.not_connected);
                             break;
                     }
                     break;
