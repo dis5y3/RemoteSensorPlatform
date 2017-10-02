@@ -163,7 +163,7 @@ public class BluetoothSerialService {
         // Send the name of the connected device back to the UI Activity
         Message msg = mHandler.obtainMessage(MainActivity.MESSAGE_DEVICE_NAME);
         Bundle bundle = new Bundle();
-        bundle.putString(MainActivity.DEVICE_NAME, device.getName());
+        bundle.putString(Constants.DEVICE_NAME, device.getName());
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
@@ -216,7 +216,7 @@ public class BluetoothSerialService {
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(MainActivity.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(MainActivity.TOAST, mContext.getString(R.string.unable_to_connect) );
+        bundle.putString(Constants.TOAST, mContext.getString(R.string.unable_to_connect) );
         msg.setData(bundle);
         mHandler.sendMessage(msg);
     }
@@ -230,7 +230,7 @@ public class BluetoothSerialService {
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(MainActivity.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
-        bundle.putString(MainActivity.TOAST, mContext.getString(R.string.connection_lost) );
+        bundle.putString(Constants.TOAST, mContext.getString(R.string.connection_lost) );
         msg.setData(bundle);
         mHandler.sendMessage(msg);
     }

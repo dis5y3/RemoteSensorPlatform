@@ -19,6 +19,7 @@ package com.cpe4097.remotesensing.remotebluetoothtest;
 
 import java.util.UUID;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -40,28 +41,27 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 3;
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
-    // Key names received from the BluetoothChatService Handler
-    public static final String DEVICE_NAME = "device_name";
-    public static final String TOAST = "toast";
 
     private String mConnectedDeviceName = null; //Name of connected device
     private StringBuffer mOutStringBuffer = null; //String buffer for outgoing messages
     private BluetoothAdapter mBTAdapter = null; //Local BT Adapter
     private BluetoothSerialService mBTService = null; //Member object for BT Services
-    private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be hardcoded
+    //private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be hardcoded
+    private String address = "B8:27:EB:0D:E5:7F"; //Travis' RPi
     //^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
     //UI elements
     private Button btConnect = null;
     private Button btSend = null;
     private TextView connectStatus = null;
-    private EditText userData = null;
+    private EditText dataPollingFrequency = null;
+    private EditText dataSiteID = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
         btConnect = (Button) findViewById(R.id.btConnect);
         btSend = (Button) findViewById(R.id.btSend);
         connectStatus = (TextView) findViewById(R.id.lbConnectStatus);
-        userData = (EditText) findViewById(R.id.etData);
+        dataPollingFrequency = (EditText) findViewById(R.id.etPollingFrequency);
+        dataSiteID = (EditText) findViewById(R.id.etSiteID);
         //Set initial states for things we can't handle in XML
         btSend.setEnabled(false); //don't want to send data without a connection, that kills the app
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); //Initialize Adapter
@@ -84,24 +85,32 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener connectHandler = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //launch activity to select device (gets a MAC address)
+                if (mBTService.getState() == BluetoothSerialService.STATE_NONE) {
+                    // Launch the DeviceListActivity to see devices and do scan
+                    Intent serverIntent = new Intent(getApplicationContext(), DeviceListActivity.class);
+                    startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+                }
+                else //already got a device? kill it all
+                if (mBTService.getState() == BluetoothSerialService.STATE_CONNECTED) {
+                    mBTService.stop();
+                    mBTService.start();
+                }
                 //do connection stuff
-//                Intent selectDevice = new Intent(getApplicationContext(), DeviceListActivity.class);
-//                startActivityForResult(selectDevice,REQUEST_CONNECT_DEVICE_SECURE);
                 BluetoothDevice mBTDevice = mBTAdapter.getRemoteDevice(address);
                 mBTService.connect(mBTDevice);
                 Log.d(TAG, "getState() = " + mBTService.getState());
                 //Wait for connection
-                //Object dontcare = null;
                 new GetConnectionStatusTask().execute();
-                //Notify user and do nothing if cannot connect
-
+                btSend.setEnabled(true); //above line not working, this is placeholder
             }
         };
         View.OnClickListener sendDataHandler = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(),"sending",Toast.LENGTH_SHORT).show();
-                String message = userData.getText().toString();
+                //build our string
+                String message = dataPollingFrequency.getText().toString() + "," + dataSiteID.getText().toString();
                 sendMessage(message);
             }
         };
@@ -114,17 +123,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Object doInBackground(Object[] objects) {
             while(mBTService.getState() == BluetoothSerialService.STATE_CONNECTING){
-                //try { wait(500); } catch (InterruptedException e) { e.printStackTrace(); }
+                //do nothing (probably a better, less intensive way to do nothing here)
             }
             return null;
         }
         protected void onPostExecute() {
+            //Check connection status, do nothing if not connected (but notify user)
             if(mBTService.getState() == BluetoothSerialService.STATE_NONE) {
                 Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT).show();
-                return;
             }
             //Enable Send button if connection successful
-            else if (mBTService.getState() == BluetoothSerialService.STATE_CONNECTED){
+            else //if (mBTService.getState() == BluetoothSerialService.STATE_CONNECTED){
+            {
+                Toast.makeText(getApplicationContext(), "connected!", Toast.LENGTH_SHORT).show();
                 btSend.setEnabled(true);
             }
         }
@@ -134,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         // If BT is not on, request that it be enabled.
-        // setupChat() will then be called during onActivityResult
         if(!mBTAdapter.isEnabled()) { //Request Enable if not enabled
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -144,38 +154,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    public void onActivityResult(int resultCode, Intent data) {
-//        // When DeviceListActivity returns with a device to connect
-//        Toast.makeText(getApplicationContext(),"onActivityResult called",Toast.LENGTH_SHORT).show();
-//        if (resultCode == Activity.RESULT_OK) {
-//            connectDevice(data);
-//        }
-//    }
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            case REQUEST_CONNECT_DEVICE:
+            // When DeviceListActivity returns with a device to connect
+            Toast.makeText(getApplicationContext(), "onActivityResult called", Toast.LENGTH_SHORT).show();
+            if (resultCode == Activity.RESULT_OK) {
+                //pull the device's MAC address for use elsewhere
+                address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+            }
+        }
+    }
 
     /**
      * Set up the UI and background operations for chat.
      */
     private void setupChat() {
         Log.d(TAG, "setupChat()");
-//
-//        // Initialize the array adapter for the conversation thread
-//        mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
-//
-//        mConversationView.setAdapter(mConversationArrayAdapter);
-//
-//
-//        // Initialize the compose field with a listener for the return key
-//        mOutEditText.setOnEditorActionListener(mWriteListener);
-//
-
         // Initialize the send button with a listener that for click events
         btSend.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Send a message using content of the edit text widget
                 View view = getCurrentFocus();
                 if (null != view) {
-                    String message = userData.getText().toString();
-                    sendMessage(message);
+                    //String message = userData.getText().toString();
+                    //sendMessage(message);
                 }
             }
         });
@@ -248,7 +251,9 @@ public class MainActivity extends AppCompatActivity {
 
             // Reset out string buffer to zero and clear the edit text field
             //mOutStringBuffer.setLength(0);
-            userData.setText("");
+            dataPollingFrequency.setText("");
+            dataSiteID.setText("");
+            mBTService.stop(); //disconnect? let's see if it works
         }
     }
 

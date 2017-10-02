@@ -16,14 +16,22 @@
     <string name="app_name">Bluetooth Test</string>
 
     <!-- Main Activity UI elements -->
+    <!--Connection Status Label Values-->
     <string name="not_connected">Not Connected</string>
     <string name="connecting">Connecting…</string>
     <string name="connected_to">Connected to <xliff:g id="device_name">%1$s</xliff:g></string>
     <string name="unable_to_connect">Unable to Connect!</string>
     <string name="connection_lost">Connection Lost!</string>
+    <!--TextViews and Buttons-->
     <string name="connect_to_server">Connect to Server</string>
-    <string name="type_a_message_to_send">Type a Message to Send</string>
-    <string name="send_data">Send Data</string>
+    <string name="send_data">Apply Device Settings</string>
+    <string name="label_slave_address">Configure Slave Address Names</string>
+    <string name="label_poll_frequency">Polling Frequency (mins):</string>
+    <string name="label_site_id">Site ID:</string>
+    <string name="hint_slave_address">enter friendly name</string>
+    <string name="hint_poll_frequency">enter an integer value</string>
+    <string name="hint_site_id">0-4294967295</string>
+
 
     <!--  DeviceListActivity -->
     <string name="scanning">scanning for devices…</string>
