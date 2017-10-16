@@ -17,6 +17,7 @@
  */
 package com.cpe4097.remotesensing.remotebluetoothtest;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import android.app.Activity;
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
+    public static final int MODIFY_ADDRESS_NAMES = 9;
 
     private String mConnectedDeviceName = null; //Name of connected device
     private StringBuffer mOutStringBuffer = null; //String buffer for outgoing messages
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     //private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be hardcoded
     private String address = "B8:27:EB:0D:E5:7F"; //Travis' RPi
     //^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
+    private ArrayList<String> modbusSlaveAddressList;
     //UI elements
     private Button btConnect = null;
     private Button btSend = null;
@@ -114,7 +117,15 @@ public class MainActivity extends AppCompatActivity {
                 sendMessage(message);
             }
         };
-        //set (now defined) OnClickListeners
+        View.OnClickListener modbusSlaveAddressNameHandler = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "opening listview", Toast.LENGTH_SHORT).show();
+                Intent listIntent = new Intent(getApplicationContext(), ModbusSlaveActivity.class);
+                startActivityForResult(listIntent, MODIFY_ADDRESS_NAMES);
+            }
+        };
+                //set (now defined) OnClickListeners
         btConnect.setOnClickListener(connectHandler);
         btSend.setOnClickListener(sendDataHandler);
     }
@@ -158,11 +169,14 @@ public class MainActivity extends AppCompatActivity {
         switch(requestCode) {
             case REQUEST_CONNECT_DEVICE:
             // When DeviceListActivity returns with a device to connect
-            Toast.makeText(getApplicationContext(), "onActivityResult called", Toast.LENGTH_SHORT).show();
-            if (resultCode == Activity.RESULT_OK) {
-                //pull the device's MAC address for use elsewhere
-                address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-            }
+                Toast.makeText(getApplicationContext(), "onActivityResult called", Toast.LENGTH_SHORT).show();
+                if (resultCode == Activity.RESULT_OK) {
+                    //pull the device's MAC address for use elsewhere
+                    address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                }
+            case MODIFY_ADDRESS_NAMES:
+            //When ModbusSlaveActivity returns with a new list of names
+                modbusSlaveAddressList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
         }
     }
 
@@ -242,13 +256,11 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
-
         // Check that there's actually something to send
         if (message.length() > 0) {
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
             mBTService.write(send);
-
             // Reset out string buffer to zero and clear the edit text field
             //mOutStringBuffer.setLength(0);
             dataPollingFrequency.setText("");
@@ -256,21 +268,6 @@ public class MainActivity extends AppCompatActivity {
             mBTService.stop(); //disconnect? let's see if it works
         }
     }
-
-
-/*    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Launch the DeviceListActivity to see devices and do scan
-        Intent serverIntent = new Intent(this, DeviceListActivity.class);
-        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-        return true;
-    }*/
     @Override
     public void onResume() {
         super.onResume();
