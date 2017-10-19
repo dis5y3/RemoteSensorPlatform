@@ -28,7 +28,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.text.TextUtilsCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -57,11 +59,12 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothSerialService mBTService = null; //Member object for BT Services
     //private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be hardcoded
     private String address = "B8:27:EB:0D:E5:7F"; //Travis' RPi
-    //^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
+    //INFO: ^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
     private ArrayList<String> modbusSlaveAddressList;
     //UI elements
     private Button btConnect = null;
     private Button btSend = null;
+    private Button btConfigSlaveAddressNames = null;
     private TextView connectStatus = null;
     private EditText dataPollingFrequency = null;
     private EditText dataSiteID = null;
@@ -70,19 +73,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Define buttons
+
+        //Define UI Elements
         btConnect = (Button) findViewById(R.id.btConnect);
         btSend = (Button) findViewById(R.id.btSend);
+        btConfigSlaveAddressNames = (Button) findViewById(R.id.btConfigSlaveAddressNames);
         connectStatus = (TextView) findViewById(R.id.lbConnectStatus);
         dataPollingFrequency = (EditText) findViewById(R.id.etPollingFrequency);
         dataSiteID = (EditText) findViewById(R.id.etSiteID);
+
         //Set initial states for things we can't handle in XML
-        btSend.setEnabled(false); //don't want to send data without a connection, that kills the app
+        btSend.setEnabled(false); //Disable all non-connection stuff, don't want user thinking they can do anything without connecting
+        btConfigSlaveAddressNames.setEnabled(false);
+        dataPollingFrequency.setEnabled(false);
+        dataSiteID.setEnabled(false);
+
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); //Initialize Adapter
         mBTService = new BluetoothSerialService(getApplicationContext(), mHandler);
         if (mBTAdapter == null) {
             //device does not support Bluetooth!
-            Toast.makeText(getApplicationContext(), "Bluetooth is not available", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), R.string.no_bluetooth, Toast.LENGTH_LONG).show();
+            finish();
         }
 
         View.OnClickListener connectHandler = new View.OnClickListener() {
@@ -102,18 +113,19 @@ public class MainActivity extends AppCompatActivity {
                 //do connection stuff
                 BluetoothDevice mBTDevice = mBTAdapter.getRemoteDevice(address);
                 mBTService.connect(mBTDevice);
+
                 Log.d(TAG, "getState() = " + mBTService.getState());
                 //Wait for connection
                 new GetConnectionStatusTask().execute();
-                btSend.setEnabled(true); //above line not working, this is placeholder
             }
         };
         View.OnClickListener sendDataHandler = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"sending",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.sending_data, Toast.LENGTH_SHORT).show();
                 //build our string
-                String message = dataPollingFrequency.getText().toString() + "," + dataSiteID.getText().toString();
+                String message = TextUtils.join(",",modbusSlaveAddressList); //format Address name list, then add the other data below
+                message = message + "," + dataPollingFrequency.getText().toString() + "," + dataSiteID.getText().toString();
                 sendMessage(message);
             }
         };
@@ -128,26 +140,32 @@ public class MainActivity extends AppCompatActivity {
                 //set (now defined) OnClickListeners
         btConnect.setOnClickListener(connectHandler);
         btSend.setOnClickListener(sendDataHandler);
-    }
+        btConfigSlaveAddressNames.setOnClickListener(modbusSlaveAddressNameHandler);
 
-    private class GetConnectionStatusTask extends AsyncTask {
+    }
+    //The Voids are doInBackground, onProgressUpdate, and onPostExecute, respectively
+    private class GetConnectionStatusTask extends AsyncTask<Void, Void, Void> {
         @Override
-        protected Object doInBackground(Object[] objects) {
+        protected Void doInBackground(Void... voids) {
             while(mBTService.getState() == BluetoothSerialService.STATE_CONNECTING){
-                //do nothing (probably a better, less intensive way to do nothing here)
+                //do nothing, wait for connection
             }
             return null;
         }
-        protected void onPostExecute() {
+
+        //I don't know why I need 'useless' but it doesn't work without it.
+        protected void onPostExecute(Void useless) {
             //Check connection status, do nothing if not connected (but notify user)
             if(mBTService.getState() == BluetoothSerialService.STATE_NONE) {
-                Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.unable_to_connect, Toast.LENGTH_SHORT).show();
             }
-            //Enable Send button if connection successful
-            else //if (mBTService.getState() == BluetoothSerialService.STATE_CONNECTED){
-            {
-                Toast.makeText(getApplicationContext(), "connected!", Toast.LENGTH_SHORT).show();
-                btSend.setEnabled(true);
+            //Enable UI Controls if connection successful
+            else if (mBTService.getState() == BluetoothSerialService.STATE_CONNECTED) {
+                    Toast.makeText(getApplicationContext(), R.string.connected_to, Toast.LENGTH_SHORT).show();
+                    btSend.setEnabled(true);
+                    btConfigSlaveAddressNames.setEnabled(true);
+                    dataPollingFrequency.setEnabled(true);
+                    dataSiteID.setEnabled(true);
             }
         }
     }
@@ -169,39 +187,16 @@ public class MainActivity extends AppCompatActivity {
         switch(requestCode) {
             case REQUEST_CONNECT_DEVICE:
             // When DeviceListActivity returns with a device to connect
-                Toast.makeText(getApplicationContext(), "onActivityResult called", Toast.LENGTH_SHORT).show();
                 if (resultCode == Activity.RESULT_OK) {
                     //pull the device's MAC address for use elsewhere
                     address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
                 }
             case MODIFY_ADDRESS_NAMES:
             //When ModbusSlaveActivity returns with a new list of names
-                modbusSlaveAddressList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
-        }
-    }
-
-    /**
-     * Set up the UI and background operations for chat.
-     */
-    private void setupChat() {
-        Log.d(TAG, "setupChat()");
-        // Initialize the send button with a listener that for click events
-        btSend.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Send a message using content of the edit text widget
-                View view = getCurrentFocus();
-                if (null != view) {
-                    //String message = userData.getText().toString();
-                    //sendMessage(message);
+                if(data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES) != null) {
+                    modbusSlaveAddressList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
                 }
-            }
-        });
-
-        // Initialize the BluetoothChatService to perform bluetooth connections
-        mBTService = new BluetoothSerialService(this, mHandler);
-
-        // Initialize the buffer for outgoing messages
-        mOutStringBuffer = new StringBuffer("");
+        }
     }
 
     //Adapted from BluetoothChat example, mostly sets connection status string
@@ -239,8 +234,8 @@ public class MainActivity extends AppCompatActivity {
                 case Constants.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
                     mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                    Toast.makeText(getApplicationContext(), "Connected to "
-                            + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(), "Connected to "
+                            //+ mConnectedDeviceName, Toast.LENGTH_SHORT).show();
                     break;
                 case Constants.MESSAGE_TOAST:
                     Toast.makeText(getApplicationContext(), msg.getData().getString(Constants.TOAST),
@@ -253,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
     private void sendMessage(String message) {
         // Check that we're actually connected before trying anything
         if (mBTService.getState() != BluetoothSerialService.STATE_CONNECTED) {
-            Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT).show();
             return;
         }
         // Check that there's actually something to send
@@ -284,9 +279,10 @@ public class MainActivity extends AppCompatActivity {
     }
     protected void onDestroy() {
         super.onDestroy(); //the usual stuff in a constructor
-        //Do extra stuff for cleanup
+        //Close the connection
         if(mBTService != null){
             mBTService.stop();
         }
     }
+
 }

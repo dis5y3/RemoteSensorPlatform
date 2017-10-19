@@ -17,6 +17,7 @@
 
     <!-- Main Activity UI elements -->
     <!--Connection Status Label Values-->
+    <string name="no_bluetooth">Bluetooth adapter not found!</string>
     <string name="not_connected">Not Connected</string>
     <string name="connecting">Connecting…</string>
     <string name="connected_to">Connected to <xliff:g id="device_name">%1$s</xliff:g></string>
@@ -47,5 +48,6 @@
     <string name="insecure_connect">Connect a device - Insecure</string>
     <string name="discoverable">Make discoverable</string>
     <string name="hint_friendly_name">Enter Friendly Name</string>
+    <string name="sending_data">Settings applied</string>
 
 </resources>
