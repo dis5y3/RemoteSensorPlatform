@@ -1,0 +1,6 @@
+#Directories
+**/.gradle
+**/.idea
+**/build
+#Files
+/RemoteBluetoothTest/local.properties
