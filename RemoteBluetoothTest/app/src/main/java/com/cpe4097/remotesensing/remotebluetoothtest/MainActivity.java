@@ -18,8 +18,6 @@
 package com.cpe4097.remotesensing.remotebluetoothtest;
 
 import java.util.ArrayList;
-import java.util.UUID;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -28,7 +26,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.text.TextUtilsCompat;
+import android.support.constraint.Guideline;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -40,34 +38,34 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     //Default BT UUID = 00001101-0000-1000-8000-00805f9b34fb
-    private final UUID deviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
+    //private final UUID deviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
     private static final String TAG = "MainActivity";
 
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 3;
     public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
     public static final int MODIFY_ADDRESS_NAMES = 9;
 
     private String mConnectedDeviceName = null; //Name of connected device
-    private StringBuffer mOutStringBuffer = null; //String buffer for outgoing messages
+    //private StringBuffer mOutStringBuffer = null; //String buffer for outgoing messages
     private BluetoothAdapter mBTAdapter = null; //Local BT Adapter
     private BluetoothSerialService mBTService = null; //Member object for BT Services
     //private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be hardcoded
     private String address = "B8:27:EB:0D:E5:7F"; //Travis' RPi
     //INFO: ^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
     private ArrayList<String> modbusSlaveAddressList;
-    //UI elements
-    private Button btConnect = null;
+    //UI elements that need to be non-local
     private Button btSend = null;
     private Button btConfigSlaveAddressNames = null;
     private TextView connectStatus = null;
     private EditText dataPollingFrequency = null;
     private EditText dataSiteID = null;
+    private EditText dataAPIIntervalMin = null;
+    private EditText dataAPIIntervalMax = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,18 +73,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //Define UI Elements
-        btConnect = (Button) findViewById(R.id.btConnect);
+        Button btConnect = (Button) findViewById(R.id.btConnect);
         btSend = (Button) findViewById(R.id.btSend);
         btConfigSlaveAddressNames = (Button) findViewById(R.id.btConfigSlaveAddressNames);
         connectStatus = (TextView) findViewById(R.id.lbConnectStatus);
         dataPollingFrequency = (EditText) findViewById(R.id.etPollingFrequency);
         dataSiteID = (EditText) findViewById(R.id.etSiteID);
+        dataAPIIntervalMin = (EditText) findViewById(R.id.etAPIIntervalMin);
+        dataAPIIntervalMax = (EditText) findViewById(R.id.etAPIIntervalMax);
 
         //Set initial states for things we can't handle in XML
-        btSend.setEnabled(false); //Disable all non-connection stuff, don't want user thinking they can do anything without connecting
+        /*btSend.setEnabled(false); //Disable all non-connection stuff, don't want user thinking they can do anything without connecting
         btConfigSlaveAddressNames.setEnabled(false);
         dataPollingFrequency.setEnabled(false);
         dataSiteID.setEnabled(false);
+        dataAPIIntervalMin.setEnabled(false);
+        dataAPIIntervalMax.setEnabled(false);*/
 
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); //Initialize Adapter
         mBTService = new BluetoothSerialService(getApplicationContext(), mHandler);
@@ -123,9 +125,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), R.string.sending_data, Toast.LENGTH_SHORT).show();
-                //build our string
+                //build our string loosely based on Amplisine Config Model for (hopefully) easy use by other device components
                 String message = TextUtils.join(",",modbusSlaveAddressList); //format Address name list, then add the other data below
-                message = message + "," + dataPollingFrequency.getText().toString() + "," + dataSiteID.getText().toString();
+                message = "{SiteID: " +dataSiteID.getText().toString() + ", Registers: [" + message +
+                        "], DataPollingFrequency: " + dataPollingFrequency.getText().toString() +
+                        "MinimumAPIInterval: " + dataAPIIntervalMin.getText().toString() +
+                        "MaximumAPIInterval: " + dataAPIIntervalMax.getText().toString();
                 sendMessage(message);
             }
         };
@@ -147,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
     private class GetConnectionStatusTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... voids) {
+            //noinspection StatementWithEmptyBody
             while(mBTService.getState() == BluetoothSerialService.STATE_CONNECTING){
                 //do nothing, wait for connection
             }
@@ -166,6 +172,8 @@ public class MainActivity extends AppCompatActivity {
                     btConfigSlaveAddressNames.setEnabled(true);
                     dataPollingFrequency.setEnabled(true);
                     dataSiteID.setEnabled(true);
+                    dataAPIIntervalMin.setEnabled(true);
+                    dataAPIIntervalMax.setEnabled(true);
             }
         }
     }
@@ -177,9 +185,6 @@ public class MainActivity extends AppCompatActivity {
         if(!mBTAdapter.isEnabled()) { //Request Enable if not enabled
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-        else if(mBTService == null) {
-            //?
         }
     }
 
@@ -219,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
                             break;
                     }
                     break;
-                case Constants.MESSAGE_WRITE:
+                /*case Constants.MESSAGE_WRITE:
                     byte[] writeBuf = (byte[]) msg.obj;
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
@@ -227,10 +232,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
-                    //mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
-                    break;
+                    break;*/
                 case Constants.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
                     mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);

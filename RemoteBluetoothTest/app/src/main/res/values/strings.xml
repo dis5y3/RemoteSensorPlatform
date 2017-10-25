@@ -27,11 +27,15 @@
     <string name="connect_to_server">Connect to Server</string>
     <string name="send_data">Apply Device Settings</string>
     <string name="label_slave_address">Configure Slave Address Names</string>
-    <string name="label_poll_frequency">Polling Frequency (mins):</string>
+    <string name="label_poll_frequency">Modbus Polling Frequency:</string>
     <string name="label_site_id">Site ID:</string>
+    <string name="label_APIInterval">API Reporting Interval</string>
+    <string name="label_APIInterval_Min">Min</string>
+    <string name="label_APIInterval_Max">Max</string>
     <string name="hint_slave_address">enter friendly name</string>
-    <string name="hint_poll_frequency">enter an integer value</string>
-    <string name="hint_site_id">0-4294967295</string>
+    <string name="hint_poll_frequency">time (minutes)</string>
+    <string name="hint_API_interval">time (seconds)</string>
+    <string name="hint_site_id">0–4294967295</string>
 
 
     <!--  DeviceListActivity -->

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,12 +14,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import java.util.ArrayList;
 
 public class ModbusSlaveActivity extends AppCompatActivity {
     public static String EXTRA_SLAVE_ADDRESS_NAMES = "slave_address_names";
     ArrayList<SlaveAdapter.ListItem> myItems = new ArrayList<>();
+    ArrayList<String> myFriendlyNames = new ArrayList<String>();
 
     //OK BUTTON PRESSED - SEND DATA ALONG
     View.OnClickListener sendNamesHandler = new View.OnClickListener() {
@@ -35,7 +36,7 @@ public class ModbusSlaveActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         Intent intent = new Intent();
-        intent.putExtra(EXTRA_SLAVE_ADDRESS_NAMES, myItems);
+        intent.putExtra(EXTRA_SLAVE_ADDRESS_NAMES, myFriendlyNames);
         finish();
     }
 
@@ -63,9 +64,13 @@ public class ModbusSlaveActivity extends AppCompatActivity {
             for(int i = 1; i < 248; i++) {
                 ListItem listItem = new ListItem();
                 listItem.setAddress(Integer.toString(i));
-                listItem.setFriendlyName("Address" + i);
+                listItem.setFriendlyName("Address " + i);
+                myFriendlyNames.add("Address " + i);
                 myItems.add(listItem);
             }
+            //getting 'com.cpe4097.remotesensing.remotebluetoothtest.ModbusSlaveActivity$SlaveAdapter$ListItem@addr
+            //Why? Best guess: myItems is a SlaveAdapter.listItem array, not a String array. Might have to break it down into another array first?
+            Log.d(EXTRA_SLAVE_ADDRESS_NAMES, TextUtils.join(",",myFriendlyNames));
             notifyDataSetChanged();
         }
         public int getCount() {
@@ -102,6 +107,7 @@ public class ModbusSlaveActivity extends AppCompatActivity {
                         final int position = v.getId();
                         final EditText etFriendlyName = (EditText) v;
                         myItems.get(position).setFriendlyName(etFriendlyName.getText().toString());
+                        myFriendlyNames.set(position, etFriendlyName.getText().toString());
                     }
                 }
             });

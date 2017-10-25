@@ -10,7 +10,7 @@
         android:id="@+id/btSendNames"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="-64dp"
+        android:layout_marginBottom="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:text="@android:string/VideoView_error_button"
@@ -22,9 +22,11 @@
     <ListView
         android:id="@+id/slaveList"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginBottom="16dp"
+        android:layout_marginTop="16dp"
         android:drawSelectorOnTop="false"
-        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintBottom_toTopOf="@+id/btSendNames"
+        app:layout_constraintTop_toTopOf="parent"
         tools:layout_editor_absoluteX="0dp" />
 </android.support.constraint.ConstraintLayout>

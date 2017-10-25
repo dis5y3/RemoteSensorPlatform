@@ -8,14 +8,26 @@
     <TextView
         android:id="@+id/labelModbusSlaveAddress"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:layout_marginEnd="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginStart="16dp"
+        android:gravity="center"
         android:text="NaN"
-        android:textSize="30sp" />
+        android:textAlignment="textStart"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <EditText
         android:id="@+id/editTextFriendlyName"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
         android:hint="@string/hint_friendly_name"
-        android:text="" />
+        android:selectAllOnFocus="true"
+        android:maxLines="1"
+        android:textAlignment="center" />
 </LinearLayout>
