@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +17,15 @@ import java.util.ArrayList;
 public class ModbusSlaveActivity extends AppCompatActivity {
     public static String EXTRA_SLAVE_ADDRESS_NAMES = "slave_address_names";
     ArrayList<SlaveAdapter.ListItem> myItems = new ArrayList<>();
-    ArrayList<String> myFriendlyNames = new ArrayList<String>();
+    ArrayList<String> myFriendlyNames = new ArrayList<>();
 
     //OK BUTTON PRESSED - SEND DATA ALONG
     View.OnClickListener sendNamesHandler = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent();
-            intent.putExtra(EXTRA_SLAVE_ADDRESS_NAMES, myItems);
+            intent.putExtra(EXTRA_SLAVE_ADDRESS_NAMES, myFriendlyNames);
+            setResult(RESULT_OK, intent);
             finish();
         }
     };
@@ -37,6 +36,7 @@ public class ModbusSlaveActivity extends AppCompatActivity {
         super.onBackPressed();
         Intent intent = new Intent();
         intent.putExtra(EXTRA_SLAVE_ADDRESS_NAMES, myFriendlyNames);
+        setResult(RESULT_OK, intent);
         finish();
     }
 
@@ -45,7 +45,6 @@ public class ModbusSlaveActivity extends AppCompatActivity {
         class ListItem {
             String address;
             String friendlyName;
-
             void setAddress(String address) {
                 this.address = address;
             }
@@ -65,12 +64,9 @@ public class ModbusSlaveActivity extends AppCompatActivity {
                 ListItem listItem = new ListItem();
                 listItem.setAddress(Integer.toString(i));
                 listItem.setFriendlyName("Address " + i);
-                myFriendlyNames.add("Address " + i);
+                myFriendlyNames.add("Address " + i); //add just the friendly name to its own array for easier access outside of this activity
                 myItems.add(listItem);
             }
-            //getting 'com.cpe4097.remotesensing.remotebluetoothtest.ModbusSlaveActivity$SlaveAdapter$ListItem@addr
-            //Why? Best guess: myItems is a SlaveAdapter.listItem array, not a String array. Might have to break it down into another array first?
-            Log.d(EXTRA_SLAVE_ADDRESS_NAMES, TextUtils.join(",",myFriendlyNames));
             notifyDataSetChanged();
         }
         public int getCount() {
@@ -86,10 +82,10 @@ public class ModbusSlaveActivity extends AppCompatActivity {
             ViewHolder holder;
             if (convertView == null) {
                 holder = new ViewHolder();
-                convertView = mInflater.inflate(R.layout.row_modbus_slave_address, null);
-                holder.editTextFriendlyName = (EditText) convertView
+                convertView = mInflater.inflate(R.layout.row_modbus_slave_address, parent,false);
+                holder.editTextFriendlyName = convertView
                         .findViewById(R.id.editTextFriendlyName);
-                holder.textViewAddress = (TextView) convertView
+                holder.textViewAddress = convertView
                         .findViewById(R.id.labelModbusSlaveAddress);
                 convertView.setTag(holder);
             } else {
@@ -120,9 +116,9 @@ public class ModbusSlaveActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_modbus_slave);
-        Button btSendNames = (Button) findViewById(R.id.btSendNames);
+        Button btSendNames = findViewById(R.id.btSendNames);
         btSendNames.setOnClickListener(sendNamesHandler);
-        ListView modbusSlaveList = (ListView) findViewById(R.id.slaveList);
+        ListView modbusSlaveList = findViewById(R.id.slaveList);
         SlaveAdapter slaveList = new SlaveAdapter();
         modbusSlaveList.setAdapter(slaveList);
 

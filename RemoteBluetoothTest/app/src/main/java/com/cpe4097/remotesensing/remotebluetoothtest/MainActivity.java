@@ -18,6 +18,8 @@
 package com.cpe4097.remotesensing.remotebluetoothtest;
 
 import java.util.ArrayList;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -26,7 +28,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.constraint.Guideline;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -37,8 +38,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
-    //Default BT UUID = 00001101-0000-1000-8000-00805f9b34fb
-    //private final UUID deviceUUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
     private static final String TAG = "MainActivity";
 
     // Intent request codes
@@ -54,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
     //private StringBuffer mOutStringBuffer = null; //String buffer for outgoing messages
     private BluetoothAdapter mBTAdapter = null; //Local BT Adapter
     private BluetoothSerialService mBTService = null; //Member object for BT Services
-    //private String address = "B8:27:EB:B4:9F:3D"; //TODO: this needs to not be hardcoded
-    private String address = "B8:27:EB:0D:E5:7F"; //Travis' RPi
+    //private String address = "B8:27:EB:0D:E5:7F"; //Travis' RPi
+    private String address = null;
     //INFO: ^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
     private ArrayList<String> modbusSlaveAddressList;
     //UI elements that need to be non-local
@@ -73,22 +72,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //Define UI Elements
-        Button btConnect = (Button) findViewById(R.id.btConnect);
-        btSend = (Button) findViewById(R.id.btSend);
-        btConfigSlaveAddressNames = (Button) findViewById(R.id.btConfigSlaveAddressNames);
-        connectStatus = (TextView) findViewById(R.id.lbConnectStatus);
-        dataPollingFrequency = (EditText) findViewById(R.id.etPollingFrequency);
-        dataSiteID = (EditText) findViewById(R.id.etSiteID);
-        dataAPIIntervalMin = (EditText) findViewById(R.id.etAPIIntervalMin);
-        dataAPIIntervalMax = (EditText) findViewById(R.id.etAPIIntervalMax);
+        Button btConnect = findViewById(R.id.btConnect);
+        btSend = findViewById(R.id.btSend);
+        btConfigSlaveAddressNames = findViewById(R.id.btConfigSlaveAddressNames);
+        connectStatus = findViewById(R.id.lbConnectStatus);
+        dataPollingFrequency = findViewById(R.id.etPollingFrequency);
+        dataSiteID = findViewById(R.id.etSiteID);
+        dataAPIIntervalMin = findViewById(R.id.etAPIIntervalMin);
+        dataAPIIntervalMax = findViewById(R.id.etAPIIntervalMax);
 
         //Set initial states for things we can't handle in XML
-        /*btSend.setEnabled(false); //Disable all non-connection stuff, don't want user thinking they can do anything without connecting
+        btSend.setEnabled(false); //Disable all non-connection stuff, don't want user thinking they can do anything without connecting
         btConfigSlaveAddressNames.setEnabled(false);
         dataPollingFrequency.setEnabled(false);
         dataSiteID.setEnabled(false);
         dataAPIIntervalMin.setEnabled(false);
-        dataAPIIntervalMax.setEnabled(false);*/
+        dataAPIIntervalMax.setEnabled(false);
 
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); //Initialize Adapter
         mBTService = new BluetoothSerialService(getApplicationContext(), mHandler);
@@ -129,9 +128,10 @@ public class MainActivity extends AppCompatActivity {
                 String message = TextUtils.join(",",modbusSlaveAddressList); //format Address name list, then add the other data below
                 message = "{SiteID: " +dataSiteID.getText().toString() + ", Registers: [" + message +
                         "], DataPollingFrequency: " + dataPollingFrequency.getText().toString() +
-                        "MinimumAPIInterval: " + dataAPIIntervalMin.getText().toString() +
-                        "MaximumAPIInterval: " + dataAPIIntervalMax.getText().toString();
+                        " MinimumAPIInterval: " + dataAPIIntervalMin.getText().toString() +
+                        " MaximumAPIInterval: " + dataAPIIntervalMax.getText().toString();
                 sendMessage(message);
+                Log.d(TAG, message);
             }
         };
         View.OnClickListener modbusSlaveAddressNameHandler = new View.OnClickListener() {
@@ -149,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
     //The Voids are doInBackground, onProgressUpdate, and onPostExecute, respectively
+    @SuppressLint("StaticFieldLeak")
     private class GetConnectionStatusTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... voids) {
@@ -194,17 +195,28 @@ public class MainActivity extends AppCompatActivity {
             // When DeviceListActivity returns with a device to connect
                 if (resultCode == Activity.RESULT_OK) {
                     //pull the device's MAC address for use elsewhere
-                    address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                    try{
+                        //noinspection ConstantConditions
+                        address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                    } catch(NullPointerException e){
+                        Log.d(TAG, "NullPointerException: " + e.getLocalizedMessage());
+                    }
                 }
             case MODIFY_ADDRESS_NAMES:
-            //When ModbusSlaveActivity returns with a new list of names
-                if(data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES) != null) {
-                    modbusSlaveAddressList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
+                //When ModbusSlaveActivity returns with a new list of names
+                if (resultCode == Activity.RESULT_OK) {
+                    try{
+                        //noinspection ConstantConditions
+                        modbusSlaveAddressList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
+                    } catch(NullPointerException e){
+                        Log.d(TAG, "NullPointerException: " + e.getLocalizedMessage());
+                    }
                 }
         }
     }
 
     //Adapted from BluetoothChat example, mostly sets connection status string
+    @SuppressLint("HandlerLeak")
     private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {

@@ -29,7 +29,6 @@ import java.io.IOException;
         import android.os.Handler;
         import android.os.Message;
         import android.util.Log;
-import android.view.View;
 
 /**
  * This class does all the work for setting up and managing Bluetooth
@@ -54,21 +53,20 @@ public class BluetoothSerialService {
 
     private boolean mAllowInsecureConnections;
 
-    private View mEmulatorView;
     private Context mContext;
 
     // Constants that indicate the current connection state
-    public static final int STATE_NONE = 0;       // we're doing nothing
-    public static final int STATE_LISTEN = 1;     // now listening for incoming connections
-    public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
-    public static final int STATE_CONNECTED = 3;  // now connected to a remote device
+    static final int STATE_NONE = 0;       // we're doing nothing
+    static final int STATE_LISTEN = 1;     // now listening for incoming connections
+    static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
+    static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
     /**
      * Constructor. Prepares a new BluetoothChat session.
      * @param context  The UI Activity Context
      * @param handler  A Handler to send messages back to the UI Activity
      */
-    public BluetoothSerialService(Context context, Handler handler) {
+    BluetoothSerialService(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
@@ -90,14 +88,14 @@ public class BluetoothSerialService {
 
     /**
      * Return the current connection state. */
-    public synchronized int getState() {
+    synchronized int getState() {
         return mState;
     }
 
     /**
      * Start the chat service. Specifically start AcceptThread to begin a
      * session in listening (server) mode. Called by the Activity onResume() */
-    public synchronized void start() {
+    synchronized void start() {
         if (D) Log.d(TAG, "start");
 
         // Cancel any thread attempting to make a connection
@@ -119,7 +117,7 @@ public class BluetoothSerialService {
      * Start the ConnectThread to initiate a connection to a remote device.
      * @param device  The BluetoothDevice to connect
      */
-    public synchronized void connect(BluetoothDevice device) {
+    synchronized void connect(BluetoothDevice device) {
         if (D) Log.d(TAG, "connect to: " + device);
 
         // Cancel any thread attempting to make a connection
@@ -141,7 +139,7 @@ public class BluetoothSerialService {
      * @param socket  The BluetoothSocket on which the connection was made
      * @param device  The BluetoothDevice that has been connected
      */
-    public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
+    private synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
         if (D) Log.d(TAG, "connected");
 
         // Cancel the thread that completed the connection
@@ -173,7 +171,7 @@ public class BluetoothSerialService {
     /**
      * Stop all threads
      */
-    public synchronized void stop() {
+    synchronized void stop() {
         if (D) Log.d(TAG, "stop");
 
 
@@ -195,7 +193,7 @@ public class BluetoothSerialService {
      * @param out The bytes to write
      * @see ConnectedThread#write(byte[])
      */
-    public void write(byte[] out) {
+    void write(byte[] out) {
         // Create temporary object
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
@@ -244,7 +242,7 @@ public class BluetoothSerialService {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
 
-        public ConnectThread(BluetoothDevice device) {
+        ConnectThread(BluetoothDevice device) {
             mmDevice = device;
             BluetoothSocket tmp = null;
 
@@ -254,7 +252,7 @@ public class BluetoothSerialService {
                 if ( mAllowInsecureConnections ) {
                     Method method;
 
-                    method = device.getClass().getMethod("createRfcommSocket", new Class[] { int.class } );
+                    method = device.getClass().getMethod("createRfcommSocket", int.class);
                     tmp = (BluetoothSocket) method.invoke(device, 1);
                 }
                 else {
@@ -300,7 +298,7 @@ public class BluetoothSerialService {
             connected(mmSocket, mmDevice);
         }
 
-        public void cancel() {
+        void cancel() {
             try {
                 mmSocket.close();
             } catch (IOException e) {
@@ -319,7 +317,7 @@ public class BluetoothSerialService {
         private final OutputStream mmOutStream;
 
 
-        public ConnectedThread(BluetoothSocket socket) {
+        ConnectedThread(BluetoothSocket socket) {
             Log.d(TAG, "create ConnectedThread");
             mmSocket = socket;
             InputStream tmpIn = null;
@@ -363,7 +361,7 @@ public class BluetoothSerialService {
          * Write to the connected OutStream.
          * @param buffer  The bytes to write
          */
-        public void write(byte[] buffer) {
+        void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
 
@@ -375,7 +373,7 @@ public class BluetoothSerialService {
             }
         }
 
-        public void cancel() {
+        void cancel() {
             try {
                 mmSocket.close();
             } catch (IOException e) {
