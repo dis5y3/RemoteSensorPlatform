@@ -53,10 +53,10 @@ public class MainActivity extends AppCompatActivity {
     //private StringBuffer mOutStringBuffer = null; //String buffer for outgoing messages
     private BluetoothAdapter mBTAdapter = null; //Local BT Adapter
     private BluetoothSerialService mBTService = null; //Member object for BT Services
-    //private String address = "B8:27:EB:0D:E5:7F"; //Travis' RPi
-    private String address = null;
+    private String address = "B8:27:EB:0D:E5:7F"; //TODO: Replace with 'dummy' default address? code doesn't like null start value
     //INFO: ^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
-    private ArrayList<String> modbusSlaveAddressList;
+    private ArrayList<String> modbusSlaveAddressNameList;
+    private ArrayList<Integer> modbusSlaveAddressIDList;
     //UI elements that need to be non-local
     private Button btSend = null;
     private Button btConfigSlaveAddressNames = null;
@@ -125,11 +125,25 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), R.string.sending_data, Toast.LENGTH_SHORT).show();
                 //build our string loosely based on Amplisine Config Model for (hopefully) easy use by other device components
-                String message = TextUtils.join(",",modbusSlaveAddressList); //format Address name list, then add the other data below
-                message = "{SiteID: " +dataSiteID.getText().toString() + ", Registers: [" + message +
-                        "], DataPollingFrequency: " + dataPollingFrequency.getText().toString() +
-                        " MinimumAPIInterval: " + dataAPIIntervalMin.getText().toString() +
-                        " MaximumAPIInterval: " + dataAPIIntervalMax.getText().toString();
+                ArrayList<String> formattedAddressList = new ArrayList<>();
+                Log.d(TAG, "myIDs: " + modbusSlaveAddressIDList.get(0).toString() + "; myIDSize: " + modbusSlaveAddressIDList.size());
+                /*for(int i = 0; i < modbusSlaveAddressIDList.size(); i++) {
+                    String temp = "\"ID\":" + modbusSlaveAddressIDList.get(i) +
+                    ", \"TypeID:\"" + modbusSlaveAddressNameList.get(i) +
+                            ", \"Message\":[x,x,x,x,x,x,x,x], \"MinDiff\":x";
+                    formattedAddressList.set(i, temp);
+                }*/
+                //String message = TextUtils.join("},{",formattedAddressList); //format Address name list, then add the other data below
+                String message = "\"ID\":" + modbusSlaveAddressIDList.get(0) +
+                        ", \"TypeID\":" + modbusSlaveAddressNameList.get(0) +
+                        ", \"Message\":[3,3,89,43,0,1,123,124], \"MinDiff\":6";
+                message = "{\"SiteID\":" +
+                        dataSiteID.getText().toString() +
+                        ", \"Registers\": [{" +
+                        message +
+                        "}]" +
+                        ", \"MinimumAPIInterval\":" + dataAPIIntervalMin.getText().toString() +
+                        ", \"MaximumAPIInterval\":" + dataAPIIntervalMax.getText().toString() + "}";
                 sendMessage(message);
                 Log.d(TAG, message);
             }
@@ -195,10 +209,9 @@ public class MainActivity extends AppCompatActivity {
             // When DeviceListActivity returns with a device to connect
                 if (resultCode == Activity.RESULT_OK) {
                     //pull the device's MAC address for use elsewhere
-                    try{
-                        //noinspection ConstantConditions
+                    try {
                         address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-                    } catch(NullPointerException e){
+                    } catch(NullPointerException e) {
                         Log.d(TAG, "NullPointerException: " + e.getLocalizedMessage());
                     }
                 }
@@ -207,7 +220,8 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == Activity.RESULT_OK) {
                     try{
                         //noinspection ConstantConditions
-                        modbusSlaveAddressList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
+                        modbusSlaveAddressNameList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
+                        modbusSlaveAddressIDList = data.getExtras().getIntegerArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_IDS);
                     } catch(NullPointerException e){
                         Log.d(TAG, "NullPointerException: " + e.getLocalizedMessage());
                     }
@@ -270,10 +284,17 @@ public class MainActivity extends AppCompatActivity {
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
             mBTService.write(send);
-            // Reset out string buffer to zero and clear the edit text field
-            //mOutStringBuffer.setLength(0);
+            //Reset to our initial state since connection ends here.
+            btSend.setEnabled(false);
+            btConfigSlaveAddressNames.setEnabled(false);
+            dataPollingFrequency.setEnabled(false);
+            dataSiteID.setEnabled(false);
+            dataAPIIntervalMin.setEnabled(false);
+            dataAPIIntervalMax.setEnabled(false);
             dataPollingFrequency.setText("");
             dataSiteID.setText("");
+            dataAPIIntervalMin.setText("");
+            dataAPIIntervalMax.setText("");
             mBTService.stop(); //disconnect? let's see if it works
         }
     }

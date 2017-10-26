@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +18,9 @@ import java.util.ArrayList;
 
 public class ModbusSlaveActivity extends AppCompatActivity {
     public static String EXTRA_SLAVE_ADDRESS_NAMES = "slave_address_names";
+    public static String EXTRA_SLAVE_ADDRESS_IDS = "slave_address_ids";
     ArrayList<SlaveAdapter.ListItem> myItems = new ArrayList<>();
+    ArrayList<Integer> myIDs = new ArrayList<>();
     ArrayList<String> myFriendlyNames = new ArrayList<>();
 
     //OK BUTTON PRESSED - SEND DATA ALONG
@@ -25,6 +29,7 @@ public class ModbusSlaveActivity extends AppCompatActivity {
         public void onClick(View v) {
             Intent intent = new Intent();
             intent.putExtra(EXTRA_SLAVE_ADDRESS_NAMES, myFriendlyNames);
+            intent.putExtra(EXTRA_SLAVE_ADDRESS_IDS, myIDs);
             setResult(RESULT_OK, intent);
             finish();
         }
@@ -36,6 +41,7 @@ public class ModbusSlaveActivity extends AppCompatActivity {
         super.onBackPressed();
         Intent intent = new Intent();
         intent.putExtra(EXTRA_SLAVE_ADDRESS_NAMES, myFriendlyNames);
+        intent.putExtra(EXTRA_SLAVE_ADDRESS_IDS, myIDs);
         setResult(RESULT_OK, intent);
         finish();
     }
@@ -60,13 +66,15 @@ public class ModbusSlaveActivity extends AppCompatActivity {
         }
         SlaveAdapter() {
             mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            for(int i = 1; i < 248; i++) {
+            for(int i = 1; i < 2; i++) {
                 ListItem listItem = new ListItem();
                 listItem.setAddress(Integer.toString(i));
-                listItem.setFriendlyName("Address " + i);
-                myFriendlyNames.add("Address " + i); //add just the friendly name to its own array for easier access outside of this activity
+                listItem.setFriendlyName(Integer.toString(i));
+                myFriendlyNames.add(Integer.toString(i)); //add just the friendly name to its own array for easier access outside of this activity
+                myIDs.add(i);
                 myItems.add(listItem);
             }
+            Log.d("tag", TextUtils.join(",",myIDs));
             notifyDataSetChanged();
         }
         public int getCount() {
@@ -104,6 +112,7 @@ public class ModbusSlaveActivity extends AppCompatActivity {
                         final EditText etFriendlyName = (EditText) v;
                         myItems.get(position).setFriendlyName(etFriendlyName.getText().toString());
                         myFriendlyNames.set(position, etFriendlyName.getText().toString());
+                        myIDs.set(position, position);
                     }
                 }
             });
