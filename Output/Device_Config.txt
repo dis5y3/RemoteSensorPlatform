@@ -1,0 +1,1 @@
+{"SiteID":123, "Registers": [{"ID":0, "TypeID":1, "Message":[3,3,89,43,0,1,123,124], "MinDiff":6}], "MinimumAPIInterval":3, "MaximumAPIInterval":600}
