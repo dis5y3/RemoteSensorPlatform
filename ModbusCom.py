@@ -36,7 +36,7 @@ def loadSiteInfo():
     global siteInfo, registers, minInterval, maxInterval, siteID
 
     #open file and convert from json
-    file = open('/home/pi/Desktop/Python/Output/Device_Config.txt', "r")
+    file = open('/home/pi/Desktop/RemoteSensorPlatform-master/Config/Device_Config.txt', "r")
     
     try:
         siteInfo = json.loads(file.read())
