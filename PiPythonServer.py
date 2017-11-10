@@ -5,10 +5,10 @@ from bluetooth import *
 from threading import Thread
 class bcolors:
     HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    OKYELLOW = '\033[93m'
-    FAIL = '\033[91m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
@@ -16,8 +16,9 @@ class bcolors:
 base_dir = '/home/pi/Desktop/RemoteSensorPlatform-master'
 device_file = base_dir + '/Config/Device_Config.txt'
 
-## modbusThread = Thread(target = modbusCom.modbusComTask)
-## modbusThread.start()
+#comment the next two lines out if you do not have USB to R485 dongle
+modbusThread = Thread(target = modbusCom.modbusComTask)
+modbusThread.start()
 
 while True:
     try:
@@ -39,7 +40,7 @@ while True:
         print bcolors.BOLD + "Waiting for connection on RFCOMM channel %d" % port + bcolors.ENDC
         
         client_sock, client_info = server_sock.accept()
-        print bcolors.OKBLUE + "Accepted connection from " + bcolors.BOLD + "{}".format(client_info) + bcolors.ENDC
+        print bcolors.BOLD + "Accepted connection from " + bcolors.BLUE + "{}".format(client_info) + bcolors.ENDC
         
         #Work on code to send existing data to app here
         
@@ -49,7 +50,7 @@ while True:
         old_file_object.close
         
         client_sock.send("[" + data_str + "]")
-        print bcolors.OKYELLOW + "sending " + bcolors.BOLD + "[%s]" % data_str + bcolors.ENDC
+        print bcolors.BOLD + "sending " + bcolors.YELLOW + "[%s]" % data_str + bcolors.ENDC
         
         while True:
         
@@ -60,7 +61,7 @@ while True:
                     data = "NO DATA SET IN APP"
                     break
 		
-                print bcolors.OKGREEN + "recieved " + bcolors.BOLD + "[%s]" % data + bcolors.ENDC       
+                print bcolors.BOLD + "recieved " + bcolors.GREEN + "[%s]" % data + bcolors.ENDC       
 ##                modbusCom.gotNewConfig = True
 ##                new_file_object = open(device_file,"w")
 ##                new_file_object.writelines(data)
@@ -73,11 +74,11 @@ while True:
                 new_file_object.close()
                 modbusCom.gotNewConfig = True
                 
-                print bcolors.FAIL + bcolors.BOLD + "disconnected" + bcolors.ENDC
+                print bcolors.BOLD + bcolors.RED + "Disconnected" + bcolors.ENDC
         
                 client_sock.close()
                 server_sock.close()
-                print bcolors.FAIL + "all done - " + bcolors.BOLD + "I0" + bcolors.ENDC
+                print bcolors.BOLD + "All done - " + bcolors.RED + "I0" + bcolors.ENDC
 
                 
                 
@@ -85,20 +86,21 @@ while True:
         
             except KeyboardInterrupt:
         
-                print bcolors.FAIL + bcolors.BOLD + "disconnected" + bcolors.ENDC
+                print bcolors.BOLD + bcolors.RED + "Disconnected" + bcolors.ENDC
         
                 client_sock.close()
                 server_sock.close()
-                print bcolors.FAIL + "bluetooth connection terminated - " + bcolors.BOLD + "Keyboard" + bcolors.ENDC
+                print bcolors.BOLD + "Bluetooth connection terminated - " + bcolors.RED + "Keyboard" + bcolors.ENDC
                 #modbusCom.stopThread = True
                 #modbusThread.join()
                 break
 
     except KeyboardInterrupt:
-        print bcolors.FAIL + bcolors.BOLD + "disconnected" + bcolors.ENDC
+        print bcolors.BOLD + bcolors.RED + "Disconnected" + bcolors.ENDC
 
         server_sock.close()
-        print bcolors.FAIL + "pi server offline - " + bcolors.BOLD + "Keyboard" + bcolors.ENDC
- ##     modbusCom.stopThread = True
- ##     modbusThread.join()
+        print bcolors.BOLD + "Pi server offline - " + bcolors.RED + "Keyboard" + bcolors.ENDC
+	#comment out two lines below if you do not have the USB to RS485 dongle 
+        modbusCom.stopThread = True
+        modbusThread.join()
         break
