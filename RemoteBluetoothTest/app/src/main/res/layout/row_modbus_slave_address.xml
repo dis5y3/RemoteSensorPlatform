@@ -22,12 +22,24 @@
 
     <EditText
         android:id="@+id/editTextFriendlyName"
-        android:layout_width="match_parent"
+        android:layout_width="212dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         android:hint="@string/hint_friendly_name"
-        android:selectAllOnFocus="true"
         android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:textAlignment="center" />
+
+    <EditText
+        android:id="@+id/editTextMinDiff"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:hint="@string/hint_min_diff"
+        android:inputType="number"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
         android:textAlignment="center" />
 </LinearLayout>

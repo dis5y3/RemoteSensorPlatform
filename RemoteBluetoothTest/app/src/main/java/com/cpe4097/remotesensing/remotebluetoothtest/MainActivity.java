@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     //INFO: ^ Run 'hcitool dev' on a pi to find BT MAC Address, change the above to match
     private ArrayList<String> modbusSlaveAddressNameList;
     private ArrayList<Integer> modbusSlaveAddressIDList;
+    private ArrayList<Integer> modbusMinDiffs;
     //UI elements that need to be non-local
     private Button btSend = null;
     private Button btConfigSlaveAddressNames = null;
@@ -126,17 +127,19 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), R.string.sending_data, Toast.LENGTH_SHORT).show();
                 //build our string loosely based on Amplisine Config Model for (hopefully) easy use by other device components
                 ArrayList<String> formattedAddressList = new ArrayList<>();
+                //we can assume all these arrays are of equal length, just pick one to do length calcs
                 Log.d(TAG, "myIDs: " + modbusSlaveAddressIDList.get(0).toString() + "; myIDSize: " + modbusSlaveAddressIDList.size());
-                /*for(int i = 0; i < modbusSlaveAddressIDList.size(); i++) {
+                for(int i = 0; i < modbusSlaveAddressIDList.size(); i++) {
                     String temp = "\"ID\":" + modbusSlaveAddressIDList.get(i) +
                     ", \"TypeID:\"" + modbusSlaveAddressNameList.get(i) +
-                            ", \"Message\":[x,x,x,x,x,x,x,x], \"MinDiff\":x";
-                    formattedAddressList.set(i, temp);
-                }*/
-                //String message = TextUtils.join("},{",formattedAddressList); //format Address name list, then add the other data below
-                String message = "\"ID\":" + modbusSlaveAddressIDList.get(0) +
+                            ", \"Message\":[0,0,0,0,0,0,0,0], \"MinDiff\":" + modbusMinDiffs.get(i);
+                    formattedAddressList.add(temp);
+                }
+                String message = TextUtils.join("},{",formattedAddressList); //format Address name list, then add the other data below
+                //TODO: Different MinDif per Address. Incorporate into ModbusSlaveActivity.java and row_*.xml files!!!
+                /*String message = "\"ID\":" + modbusSlaveAddressIDList.get(0) +
                         ", \"TypeID\":" + modbusSlaveAddressNameList.get(0) +
-                        ", \"Message\":[3,3,89,43,0,1,123,124], \"MinDiff\":6";
+                        ", \"Message\":[3,3,89,43,0,1,123,124], \"MinDiff\":6";*/
                 message = "{\"SiteID\":" +
                         dataSiteID.getText().toString() +
                         ", \"Registers\": [{" +
@@ -220,8 +223,12 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == Activity.RESULT_OK) {
                     try{
                         //noinspection ConstantConditions
-                        modbusSlaveAddressNameList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_NAMES);
-                        modbusSlaveAddressIDList = data.getExtras().getIntegerArrayList(ModbusSlaveActivity.EXTRA_SLAVE_ADDRESS_IDS);
+                        modbusSlaveAddressNameList = data.getExtras().getStringArrayList(ModbusSlaveActivity.EXTRA_NAMES);
+                        modbusSlaveAddressIDList = data.getExtras().getIntegerArrayList(ModbusSlaveActivity.EXTRA_IDS);
+                        modbusMinDiffs = data.getExtras().getIntegerArrayList(ModbusSlaveActivity.EXTRA_MIN_DIFFS);
+                        Log.d(TAG, TextUtils.join(",", modbusSlaveAddressIDList));
+                        Log.d(TAG, TextUtils.join(",", modbusSlaveAddressNameList));
+                        Log.d(TAG, TextUtils.join(",",modbusMinDiffs));
                     } catch(NullPointerException e){
                         Log.d(TAG, "NullPointerException: " + e.getLocalizedMessage());
                     }

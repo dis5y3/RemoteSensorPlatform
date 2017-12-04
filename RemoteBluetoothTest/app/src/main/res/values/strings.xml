@@ -13,7 +13,8 @@
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Bluetooth Test</string>
+    <string name="app_name">AmpliSine Remote Sensor Setup</string>
+    <string name="modbus_slave_list_activity_name">Modbus Slave Devices</string>
 
     <!-- Main Activity UI elements -->
     <!--Connection Status Label Values-->
@@ -53,5 +54,6 @@
     <string name="discoverable">Make discoverable</string>
     <string name="hint_friendly_name">Enter Friendly Name</string>
     <string name="sending_data">Settings applied</string>
+    <string name="hint_min_diff">set min diff</string>
 
 </resources>
