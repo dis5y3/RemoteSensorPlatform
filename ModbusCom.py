@@ -4,6 +4,7 @@ import json
 import time
 import serial
 import struct
+import serverLog
 
 
 ser = serial.Serial('/dev/ttyUSB0', 9600, timeout = 0.5)
@@ -102,7 +103,8 @@ def modbusComTask():
                         #report an error
                         print "error reading value"
                     elif abs(reg['lastValue'] - val) > reg['MinDiff']:
-                        #TODO report value
+                        #report value
+                        LogDataToServer(siteID, reg['ID'], reg['TypeID'], currentTime, str(val))
                         print "got " + str(val) + " at " + str(currentTime - reg['lastReadTime']) + ' seconds from register ID:' + str(reg['ID'])
 
                         #store the last value
@@ -113,8 +115,8 @@ def modbusComTask():
 
                 #check if the register is over the last interval and send an empty report
                 if currentTime - reg['lastReadTime'] > maxInterval:
-                    #TODO send an empty report
-
+                    #send a report
+                    LogDataToServer(siteID, reg['ID'], reg['TypeID'], currentTime, str(val))
                     #update the last read time
                     reg['lastReadTime'] = currentTime
 
