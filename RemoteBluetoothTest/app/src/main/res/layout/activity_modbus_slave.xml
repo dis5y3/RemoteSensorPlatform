@@ -7,13 +7,14 @@
     android:label="@string/modbus_slave_list_activity_name"
     tools:context="com.cpe4097.remotesensing.remotebluetoothtest.ModbusSlaveActivity">
 
-    <!--replace w/ ic_plus_sign-->
+    <!--replace w/ ic_plus_sign
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/myFAB"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_launcher"
         app:elevation="4dp" />
+        -->
 
     <Button
         android:id="@+id/btSendNames"

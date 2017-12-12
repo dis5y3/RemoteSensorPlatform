@@ -128,18 +128,19 @@ public class MainActivity extends AppCompatActivity {
                 //build our string loosely based on Amplisine Config Model for (hopefully) easy use by other device components
                 ArrayList<String> formattedAddressList = new ArrayList<>();
                 //we can assume all these arrays are of equal length, just pick one to do length calcs
-                Log.d(TAG, "myIDs: " + modbusSlaveAddressIDList.get(0).toString() + "; myIDSize: " + modbusSlaveAddressIDList.size());
-                for(int i = 0; i < modbusSlaveAddressIDList.size(); i++) {
+                //Log.d(TAG, "myIDs: " + modbusSlaveAddressIDList.get(0).toString() + "; myIDSize: " + modbusSlaveAddressIDList.size());
+                //TODO: re-implement below section for multiple addresses. Must get dynamic list working first
+                /*for(int i = 0; i < modbusSlaveAddressIDList.size(); i++) {
                     String temp = "\"ID\":" + modbusSlaveAddressIDList.get(i) +
                     ", \"TypeID:\"" + modbusSlaveAddressNameList.get(i) +
                             ", \"Message\":[0,0,0,0,0,0,0,0], \"MinDiff\":" + modbusMinDiffs.get(i);
                     formattedAddressList.add(temp);
-                }
-                String message = TextUtils.join("},{",formattedAddressList); //format Address name list, then add the other data below
+                }*/
+                //String message = TextUtils.join("},{",formattedAddressList); //format Address name list, then add the other data below
                 //TODO: Different MinDif per Address. Incorporate into ModbusSlaveActivity.java and row_*.xml files!!!
-                /*String message = "\"ID\":" + modbusSlaveAddressIDList.get(0) +
-                        ", \"TypeID\":" + modbusSlaveAddressNameList.get(0) +
-                        ", \"Message\":[3,3,89,43,0,1,123,124], \"MinDiff\":6";*/
+                String message = "\"ID\":" + "1" +
+                        ", \"TypeID\":" + "1" +
+                        ", \"Message\":[3,3,89,43,0,1,123,124], \"MinDiff\":6";
                 message = "{\"SiteID\":" +
                         dataSiteID.getText().toString() +
                         ", \"Registers\": [{" +

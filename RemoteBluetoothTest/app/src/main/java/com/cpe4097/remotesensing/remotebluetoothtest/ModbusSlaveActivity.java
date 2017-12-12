@@ -27,7 +27,7 @@ public class ModbusSlaveActivity extends AppCompatActivity {
     ArrayList<Integer> myIDs = new ArrayList<>();
     ArrayList<Integer> myMinDiffs = new ArrayList<>();
     ArrayList<String> myFriendlyNames = new ArrayList<>();
-    FloatingActionButton myFab = null;
+    //FloatingActionButton myFab = null;
 
     //OK BUTTON PRESSED - SEND DATA ALONG
     View.OnClickListener sendNamesHandler = new View.OnClickListener() {
@@ -98,12 +98,12 @@ public class ModbusSlaveActivity extends AppCompatActivity {
         }
         SlaveAdapter() {
             mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            /*for(int i = 1; i < 5; i++) {
+            for(int i = 1; i < 2; i++) {
                 ListItem listItem = new ListItem(i, "address " + i, 6);
                 myFriendlyNames.add(Integer.toString(i)); //add just the friendly name to its own array for easier access outside of this activity
                 myIDs.add(i);
                 myMinDiffs.add(6);
-            }*/
+            }
             Log.d(TAG, TextUtils.join(",",myIDs));
             notifyDataSetChanged();
         }
@@ -187,13 +187,13 @@ public class ModbusSlaveActivity extends AppCompatActivity {
         final ListView modbusSlaveList = findViewById(R.id.slaveList);
         final SlaveAdapter slaveList = new SlaveAdapter();
         modbusSlaveList.setAdapter(slaveList);
-        myFab = findViewById(R.id.myFAB);
+        /*myFab = findViewById(R.id.myFAB);
         myFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 slaveList.addItem(slaveList.getCount(), "address " + slaveList.getCount(), 6);
             }
-        });
+        });*/
     }
 
     private class ViewHolder {
