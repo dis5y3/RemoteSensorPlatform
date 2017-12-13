@@ -1,0 +1,11 @@
+Configuration Model:
+{SiteID: 0, Registers: [{ID:0, TypeID:0, Interval:0, Message: [3,3,89,43,0,1,244,132], MinDiff:6}], MinimumAPIInterval:3, MaximumAPIInterval:600}
+
+All intervals are in seconds
+MinDiff:  The minimum difference between the most recently RECORDED reading and the new reading to consider it a change significant enough to report.  If the change isn't significant enough, then discard the newly read message received from polling.
+ID:  The register id used for identification purposes on the API side
+TypeID: Another identification item for the API
+SiteID: The main identification ID for the API
+MinimumAPIInterval: The shortest time allowed between sending data updates to the API
+MaximumAPIInterval: The longest time allowed to elapse before communicating with the API.  This will typically happen when none of the sensor readings have changed significantly enough within that time time interval.  If this is the case, then send an empty array of values to the API so that the API can simply record your communication event to ensure everything is still up and running on the device.
+Message: The pre-constructed modbus message that needs to be sent.  Nothing will have to be changed on this item, including the CRC.  The one thing that will have to be accounted for is that interpreting the message to know how many bytes to expect back after sending the message, as well as a CRC check on the received polling response message.
